@@ -1,9 +1,7 @@
 OSPi
 ====
-
-A Python port of the Arduino based OpenSprinkler firmware V 1.8.3
+Port of OpenSprinkler for RPi and BBB. Utilizes Solar Powered soil sensors.
 -----------------------------------------------------------------
-OpenSprinkler Pi (OSPi) Interval Program Demo<br/>
 Creative Commons Attribution-ShareAlike 3.0 license<br/>
 June 2013, http://rayshobby.net
 
@@ -11,6 +9,13 @@ June 2013, http://rayshobby.net
 UPDATES
 ===========
 ***********
+
+April 5 2014
+-----------
+(Nathan)<br/>
+Changes:<br/>
+1. Initial Commit with baseline code. Taken from the BBB at the initial testing site. 
+
 
 July 11 2014
 -----------
