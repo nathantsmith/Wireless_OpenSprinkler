@@ -1,0 +1,181 @@
+$def with ()
+
+<!-- 
+  2013-13-06: jonathanmarsh
+    - Converted to web.py template, retaining 99% of older look and feel
+    - Moved inline styling to stylesheet
+    - Moved inline behaviors to jQuery.
+    Note that the normal jQuery use of the dollar sign conflicts with the templating syntax - used the longer jQuery() throughout.
+ -->
+
+$code:
+	snames = eval(data('snames'))
+	hubnames = eval(data('hubnames'))
+
+<html>
+<head>
+	<meta name="viewport" content="width=640">
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>OpenSprinkler Pi Run-Once ${" - "+gv.sd['name'] if gv.sd['name']!="OpenSprinkler Pi" else ""}</title>
+	<link href="/static/images/favicon.ico" rel="icon" type="image/x-icon">
+	<link href="${gv.baseurl}/static/themes/${gv.sd['theme']}/base.css" rel="stylesheet" type="text/css"/>	
+	<script src="${gv.baseurl}/static/scripts/jquery-1.8.2.min.js"></script>
+	<script>		
+		// Variables set by ospi.py
+		var devt = ${gv.now}*1000;
+		var tz = ${gv.sd['tz']};
+		var timeFormat = ${gv.sd['tf']};
+		var cputemp = "${gv.cputemp}";
+		var tempunit = "${gv.sd['tu']}";
+		var nbrd = ${gv.sd['nbrd']};
+		var mas = ${gv.sd['mas']};
+		var sh = ${gv.sd['sh']};
+	</script>
+	<script src="${gv.baseurl}/static/scripts/behaviors.js"></script>
+	<script>		
+		// Initialize behaviors
+		jQuery(document).ready(function(){
+			
+			jQuery("button#cSubmit").click(function(){
+					/*var vi;
+					for (i=0; i<sh; i++) {
+						vi = "";
+						for (s=0; s<(nbrd*8); s++) {
+							if (jQuery("#vc"+s+i).is(":checked")) {
+								vi += "1";
+							}
+							else {
+								vi += "0";
+							}
+						}*/
+					var vi;
+					for (i=0; i<sh; i++) { 
+						vi = "";
+						for (s=0; s<(8*nbrd); s++) {
+							if (jQuery("#vc"+s+i).is(":checked")) {
+								vi += "1";
+							}	
+							else {
+								vi += "0";
+							}
+							jQuery("#vac"+i).val(vi);
+						}
+					}
+				jQuery("#sensorhubs").submit();
+			});
+			jQuery("button#cResetNames").click(function(){
+				input = window.confirm("This will reset all names, mac addresses, and valve control buttons. Do you want to continue?");
+				if (input == true) {
+					jQuery(".hubName input").each(function (index) {
+						jQuery(this).val("Sensor Hub " + (index+1));
+					});
+					jQuery(".hubMAC input").each(function (index) {
+						jQuery(this).val("MAC Address " + (index+1));
+					});
+					jQuery("input[type='checkbox']").each(function () {
+						jQuery(this).prop('checked', false);
+					});
+				}
+			});
+			
+			jQuery("button#cCancel").click(function(){
+				window.location="/";
+			});
+
+		});
+
+	</script>
+</head>
+<body>
+	<div class="content">
+		<div class="header">
+			<div class="title">${gv.sd['name'] if gv.sd['name']!="OpenSprinkler Pi" else ""}</div>
+		</div>
+		
+		<div class="body">
+			<div id="status">
+				<p id="deviceTime"><span class="hour"></span><span class="sep">:</span><span class="minute"></span><span class="second"></span><span class="ampm"></span></p>
+				<p id="deviceDate"></p>
+				<h6> </h6>
+			</div>
+	
+			<div class="panel">
+			
+				<div id="nav">
+					<button id="bHome" class="home" title="Home">Home</button>
+					$if ((gv.sd['mm'])==0):
+						<button id="bPrograms" class="programs" title="Define Programs">Programs</button>
+					<button id="bSensorHubs" class="hubs here" title="Configure Sensor Hubs">Sensor Hubs</button>
+					<button id="bStations" class="stations" title="Configure Valves">Valves</button>
+					<button id="bRunOnce" class="start" title="Define Run Once Program">Run Once</button>
+					<button id="bLog" class="log" title="View Log">Log</button>
+					<button id="bOptions" class="options" title="Options">Options</button>
+					$if not(gv.sd['ipas']):
+						<button id="bLogout" class="logout" title="Logout">Logout</button>
+				</div>
+								
+				<div id="runonce">
+					<div class="title">Configure Sensor Hubs</div>
+					<form id="sensorhubs" name="sensorhubs" action="sh" method="get">
+						<table class="stationList">
+							<tr>
+								<th class="stationNumber">Sensor Hub</th>
+								<th class="stationName">Name</th>
+								<th class="stationName">MAC Address</th>
+								$for bid in range(0, gv.sd['nbrd']):
+									$for s in range(0,8):
+										$ sid = bid*8 + s;
+											<th class="stationIgnore">${sid + 1}</th>
+								$if gv.sd['mas'] > 0:
+									<th class="stationMaster">Activate Master?</th>
+							</tr>
+							$ col = 0;
+							$ i = 0;
+							$for shid in range(0, gv.sd['sh']):
+							<tr>
+							  <td class="stationNumber">${shid + 1}</td>
+ 								<td class="hubName">
+ 									<input type="text" size="${gv.sd['snlen']}" maxlength="${gv.sd['snlen']}" value="${(hubnames[shid])[0]}" name="sh${shid}" id="n${shid}">
+ 								</td>
+ 								<td class="hubMAC">
+ 									<input type="text" size="${gv.sd['snlen']}" maxlength="${gv.sd['snlen']}" value="${(hubnames[shid])[1]}" name="mac${shid}" id="n${shid}">
+ 								</td>	
+ 								$if sid == gv.sd['mas'] - 1:
+ 									<td class="stationMaster" colspan="3">(Master valve)</td>
+ 								$else:
+								$for bid in range(0,gv.sd['nbrd']):
+									$for s in range(0,8):
+ 		  								$ sid = bid*8 + s;
+			  							<td class="stationIgnore">
+											<input type="checkbox" ${"checked" if (hubnames[shid][2][sid])=="1" else ""} id="vc${sid}${col}">
+					  					</td>
+								$ col = col + 1
+							  	$if gv.sd['mas'] > 0 and gv.sd['mas'] != sid+1:
+								  	<td class="stationMaster">
+									  	<input type="checkbox" ${"checked" if gv.sd['mo'][bid]&(1<<s) else ""} id="mc${sid}">
+								  	</td>
+                <tr>
+						</table>
+						
+						<p></p>
+						
+						$for bid in range(gv.sd['sh']):
+							<input type="hidden" id="vac${bid}" name="vac${bid}"/>
+					</form>
+				</div>
+				
+				<div id="controls">
+					<button id="cSubmit" class="submit">Submit Changes</button>
+					<button id="cResetNames" class="refresh">Reset</button>
+					<button id="cCancel" class="cancel danger">Cancel</button>
+				</div>
+			</div>
+		</div>
+		
+		<div class="footer">
+			<p>CPU Temp: <b><span id="heat" style="cursor:pointer" title="Click to toggle Celsius &lt;&gt; Fahrenheit"></span></b></p>
+			<p><a href="https://github.com/Dan-in-CA/OSPi">Software</a> version: <b>${".".join(list(str(gv.ver)))}</b></p>
+		</div>
+	</div>
+</body>
+</html>
